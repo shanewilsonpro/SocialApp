@@ -37,8 +37,57 @@ class RegisterVC: UIViewController {
         //if the text is entered
         } else {
             
-            //create new user in mySQL
+            //url to php file
+            let url = NSURL(string: "http://localhost/SocialApp/register.php")!
             
+            //request to this file
+            let request = NSMutableURLRequest(URL: url)
+            
+            //method to pass data to this file (e.g. via POST)
+            request.HTTPMethod = "POST"
+            
+            //body to be appended to url
+            let body = "username=\(usernameText.text!.lowercaseString)&password=\(passwordText.text!)&email=\(emailText.text!)&fullname=\(firstnameText.text!)%20\(lastnameText.text!)"
+            request.HTTPBody = body.dataUsingEncoding(NSUTF8StringEncoding)
+            
+            // proceed request
+            NSURLSession.sharedSession().dataTaskWithRequest(request, completionHandler: { (data:NSData?, response:NSURLResponse?, error:NSError?) in
+                
+                if error == nil {
+                    
+                    // get main queue in code process to communicate back to UI
+                    dispatch_async(dispatch_get_main_queue(), {
+                        do {
+                            //get json result
+                            let json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableContainers) as? NSDictionary
+                            
+                            //assign json to new var parseJSON in guard/secured way
+                            guard let parseJSON = json else {
+                                print("Error while parsing")
+                                return
+                            }
+                            
+                            //get id from parseJSON dictionary
+                            let id = parseJSON["id"]
+                            
+                            //if there is some id value
+                            if id != nil {
+                                print(parseJSON)
+                            }
+                            
+                        } catch {
+                            print("Caught an error: \(error)")
+                        }
+                        
+                    })
+                    
+                //if unable to proceed request
+                } else {
+                    print("error: \(error)")
+                }
+            
+            //launch prepared session
+            }).resume()
         }
     }
     
